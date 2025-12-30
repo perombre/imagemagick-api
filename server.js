@@ -7,16 +7,23 @@ const app = express();
 const upload = multer({ dest: "/tmp" });
 
 app.post("/render", upload.single("image"), (req, res) => {
-  const input = req.file?.path;
-  const texts = req.body.texts ? JSON.parse(req.body.texts) : [];
-
-  if (!input) {
+  if (!req.file) {
     return res.status(400).send("Image file is required");
   }
 
-  const output = `/tmp/output-${Date.now()}.png`;
+  const input = req.file.path;
 
-  // monta dinamicamente os -draw
+  let texts = [];
+  if (req.body.texts) {
+    try {
+      texts = JSON.parse(req.body.texts);
+    } catch (e) {
+      return res.status(400).send("Invalid texts JSON");
+    }
+  }
+
+  const output = "/tmp/output-" + Date.now() + ".png";
+
   const drawCommands = texts.map(t => {
     const safeText = (t.text || "").replace(/"/g, '\\"');
     return `
@@ -46,7 +53,9 @@ app.post("/render", upload.single("image"), (req, res) => {
   });
 });
 
-app.get("/health", (_, res) => res.send("ok"));
+app.get("/health", (req, res) => {
+  res.send("ok");
+});
 
 app.listen(3000, () => {
   console.log("ImageMagick API running on port 3000");

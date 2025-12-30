@@ -23,9 +23,9 @@ app.post("/render", upload.single("image"), (req, res) => {
 
   const drawCommands = texts.map(t => {
     const safeText = (t.text || "").replace(/'/g, "\\'");
-    const x = Number(t.x ?? 0);
-    const y = Number(t.y ?? 0);
-    const size = Number(t.size ?? 48);
+    const x = Number(t.x !== undefined ? t.x : 0);
+    const y = Number(t.y !== undefined ? t.y : 0);
+    const size = Number(t.size !== undefined ? t.size : 48);
     const font = t.font || "Liberation-Sans-Bold";
     const color = t.color || "white";
 

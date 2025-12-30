@@ -13,7 +13,10 @@ app.post("/render", upload.single("image"), (req, res) => {
 
   let texts = [];
   try {
-    texts = req.body.texts ? JSON.parse(req.body.texts) : [];
+ texts = req.body.texts
+  ? JSON.parse(req.body.texts.trim())
+  : [];
+
   } catch {
     return res.status(400).send("Invalid texts JSON");
   }

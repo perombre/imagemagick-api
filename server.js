@@ -24,21 +24,13 @@ app.post("/render", upload.single("image"), (req, res) => {
 
   const output = "/tmp/output-" + Date.now() + ".png";
 
-  const drawCommands = texts.map(t => {
-    const safeText = (t.text || "").replace(/"/g, '\\"');
-    return `
-      -font "${t.font || "DejaVu-Sans"}"
-      -pointsize ${t.size || 24}
-      -fill "${t.color || "black"}"
-      -draw "text ${t.x || 0},${t.y || 0} \\"${safeText}\\""
-    `;
-  }).join(" ");
+const drawCommands = texts.map(t => {
+  const safeText = (t.text || "").replace(/"/g, '\\"');
+  return `-font "${t.font || "DejaVu-Sans"}" -pointsize ${t.size || 24} -fill "${t.color || "black"}" -draw "text ${t.x || 0},${t.y || 0} \\"${safeText}\\""`;
+}).join(" ");
 
-  const cmd = `
-    convert "${input}" \
-    ${drawCommands} \
-    "${output}"
-  `;
+
+const cmd = `convert "${input}" ${drawCommands} "${output}"`;
 
   exec(cmd, (error) => {
     if (error) {

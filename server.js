@@ -25,8 +25,19 @@ let currentY = 850;
 
 const drawCommands = texts.map(t => {
   const safeText = (t.text || "").replace(/'/g, "\\'");
-  const cmd = `-gravity NorthWest -fill white -stroke black -strokewidth 1 -pointsize ${t.size || 48} -draw "text ${t.x || 200},${currentY} '${safeText}'"`;
-  currentY += (t.size || 48) + 20;
+  const size = t.size || 48;
+
+  const cmd = `
+    -gravity NorthWest
+    -font "Liberation-Sans-Bold"
+    -fill white
+    -stroke black
+    -strokewidth 1
+    -pointsize ${size}
+    -draw "text ${t.x || 200},${currentY} '${safeText}'"
+  `;
+
+  currentY += size + 20;
   return cmd;
 }).join(" ");
 

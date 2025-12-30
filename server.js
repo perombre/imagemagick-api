@@ -21,10 +21,15 @@ app.post("/render", upload.single("image"), (req, res) => {
   const input = req.file.path;
   const output = `/tmp/output-${Date.now()}.png`;
 
- const drawCommands = texts.map(t => {
-  const safeText = (t.text || "TESTE").replace(/'/g, "\\'");
-  return `-gravity NorthWest -fill red -stroke white -strokewidth 2 -pointsize 120 -draw "text 200,300 '${safeText}'"`;
+let currentY = 850;
+
+const drawCommands = texts.map(t => {
+  const safeText = (t.text || "").replace(/'/g, "\\'");
+  const cmd = `-gravity NorthWest -fill white -stroke black -strokewidth 1 -pointsize ${t.size || 48} -draw "text ${t.x || 200},${currentY} '${safeText}'"`;
+  currentY += (t.size || 48) + 20;
+  return cmd;
 }).join(" ");
+
 
   const cmd = `convert "${input}" ${drawCommands} "${output}"`;
 

@@ -1,6 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const { execFile } = require("child_process");
+const { exec } = require("child_process");
 const fs = require("fs");
 
 const app = express();
@@ -13,10 +13,7 @@ app.post("/render", upload.single("image"), (req, res) => {
 
   let texts = [];
   try {
- texts = req.body.texts
-  ? JSON.parse(req.body.texts.trim())
-  : [];
-
+    texts = req.body.texts ? JSON.parse(req.body.texts.trim()) : [];
   } catch {
     return res.status(400).send("Invalid texts JSON");
   }
@@ -24,34 +21,29 @@ app.post("/render", upload.single("image"), (req, res) => {
   const input = req.file.path;
   const output = `/tmp/output-${Date.now()}.png`;
 
-  // argumentos do ImageMagick
-  const args = [input];
+  const drawCommands = texts.map(t => {
+    const safeText = (t.text || "").replace(/'/g, "\\'");
+    const x = Number(t.x ?? 0);
+    const y = Number(t.y ?? 0);
+    const size = Number(t.size ?? 48);
+    const font = t.font || "Liberation-Sans-Bold";
+    const color = t.color || "white";
 
-  let currentY = 850;
+    return `
+      -font "${font}"
+      -pointsize ${size}
+      -fill "${color}"
+      -stroke black
+      -strokewidth 1
+      -draw "text ${x},${y} '${safeText}'"
+    `;
+  }).join(" ");
 
-  texts.forEach(t => {
-    const text = t.text || "";
-    const size = t.size || 48;
-    const x = t.x || 120;
+  const cmd = `convert "${input}" ${drawCommands} "${output}"`;
 
-    args.push(
-      "-gravity", "NorthWest",
-      "-font", "Liberation-Sans-Bold",
-      "-fill", "white",
-      "-stroke", "black",
-      "-strokewidth", "1",
-      "-pointsize", String(size),
-      "-draw", `text ${x},${currentY} '${text}'`
-    );
-
-    currentY += size + 20;
-  });
-
-  args.push(output);
-
-  execFile("convert", args, (error) => {
+  exec(cmd, (error) => {
     if (error) {
-      console.error("ImageMagick error:", error);
+      console.error("ImageMagick error:", error.message);
       return res.status(500).send(error.message);
     }
 

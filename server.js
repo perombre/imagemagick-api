@@ -14,7 +14,7 @@ app.post("/render", upload.single("image"), (req, res) => {
   let texts = [];
   try {
     texts = req.body.texts ? JSON.parse(req.body.texts) : [];
-  } catch (e) {
+  } catch {
     return res.status(400).send("Invalid texts JSON");
   }
 
@@ -23,23 +23,14 @@ app.post("/render", upload.single("image"), (req, res) => {
 
   const drawCommands = texts.map(t => {
     const safeText = (t.text || "").replace(/'/g, "\\'");
-    return `
-      -font "${t.font || "DejaVu-Sans"}"
-      -pointsize ${t.size || 24}
-      -fill "${t.color || "black"}"
-      -draw "text ${t.x || 0},${t.y || 0} '${safeText}'"
-    `;
+    return `-font "${t.font || "DejaVu-Sans"}" -pointsize ${t.size || 24} -fill "${t.color || "black"}" -draw "text ${t.x || 0},${t.y || 0} '${safeText}'"`;
   }).join(" ");
 
-  const cmd = `
-    convert "${input}"
-    ${drawCommands}
-    "${output}"
-  `;
+  const cmd = `convert "${input}" ${drawCommands} "${output}"`;
 
   exec(cmd, (error) => {
     if (error) {
-      console.error(error);
+      console.error("ImageMagick error:", error.message);
       return res.status(500).send(error.message);
     }
 

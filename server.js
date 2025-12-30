@@ -1,6 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const { exec } = require("child_process");
+const { execFile } = require("child_process");
 const fs = require("fs");
 
 const app = express();
@@ -21,32 +21,34 @@ app.post("/render", upload.single("image"), (req, res) => {
   const input = req.file.path;
   const output = `/tmp/output-${Date.now()}.png`;
 
-let currentY = 850;
+  // argumentos do ImageMagick
+  const args = [input];
 
-const drawCommands = texts.map(t => {
-  const safeText = (t.text || "").replace(/'/g, "\\'");
-  const size = t.size || 48;
+  let currentY = 850;
 
-  const cmd = `
-    -gravity NorthWest
-    -font "Liberation-Sans-Bold"
-    -fill white
-    -stroke black
-    -strokewidth 1
-    -pointsize ${size}
-    -draw "text ${t.x || 200},${currentY} '${safeText}'"
-  `;
+  texts.forEach(t => {
+    const text = t.text || "";
+    const size = t.size || 48;
+    const x = t.x || 120;
 
-  currentY += size + 20;
-  return cmd;
-}).join(" ");
+    args.push(
+      "-gravity", "NorthWest",
+      "-font", "Liberation-Sans-Bold",
+      "-fill", "white",
+      "-stroke", "black",
+      "-strokewidth", "1",
+      "-pointsize", String(size),
+      "-draw", `text ${x},${currentY} '${text}'`
+    );
 
+    currentY += size + 20;
+  });
 
-  const cmd = `convert "${input}" ${drawCommands} "${output}"`;
+  args.push(output);
 
-  exec(cmd, (error) => {
+  execFile("convert", args, (error) => {
     if (error) {
-      console.error("ImageMagick error:", error.message);
+      console.error("ImageMagick error:", error);
       return res.status(500).send(error.message);
     }
 

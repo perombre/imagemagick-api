@@ -11,8 +11,6 @@ app.post("/render", upload.single("image"), (req, res) => {
     return res.status(400).send("Image file is required");
   }
 
-  const input = req.file.path;
-
   let texts = [];
   if (req.body.texts) {
     try {
@@ -22,19 +20,20 @@ app.post("/render", upload.single("image"), (req, res) => {
     }
   }
 
-  const output = "/tmp/output-" + Date.now() + ".png";
+  const input = req.file.path;
+  const output = `/tmp/output-${Date.now()}.png`;
 
-const drawCommands = texts.map(t => {
-  const safeText = (t.text || "").replace(/"/g, '\\"');
-  return `-font "${t.font || "DejaVu-Sans"}" -pointsize ${t.size || 24} -fill "${t.color || "black"}" -draw "text ${t.x || 0},${t.y || 0} \\"${safeText}\\""`;
-}).join(" ");
+  // monta tudo em UMA linha
+  const drawCommands = texts.map(t => {
+    const safeText = (t.text || "").replace(/"/g, '\\"');
+    return `-font "${t.font || "DejaVu-Sans"}" -pointsize ${t.size || 24} -fill "${t.color || "black"}" -draw "text ${t.x || 0},${t.y || 0} \\"${safeText}\\""`;
+  }).join(" ");
 
-
-const cmd = `convert "${input}" ${drawCommands} "${output}"`;
+  const cmd = `convert "${input}" ${drawCommands} "${output}"`;
 
   exec(cmd, (error) => {
     if (error) {
-      console.error(error);
+      console.error("ImageMagick error:", error);
       return res.status(500).send(error.message);
     }
 
@@ -45,9 +44,7 @@ const cmd = `convert "${input}" ${drawCommands} "${output}"`;
   });
 });
 
-app.get("/health", (req, res) => {
-  res.send("ok");
-});
+app.get("/health", (req, res) => res.send("ok"));
 
 app.listen(3000, () => {
   console.log("ImageMagick API running on port 3000");

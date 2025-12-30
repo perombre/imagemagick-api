@@ -29,14 +29,7 @@ app.post("/render", upload.single("image"), (req, res) => {
     const font = t.font || "Liberation-Sans-Bold";
     const color = t.color || "white";
 
-    return `
-      -font "${font}"
-      -pointsize ${size}
-      -fill "${color}"
-      -stroke black
-      -strokewidth 1
-      -draw "text ${x},${y} '${safeText}'"
-    `;
+    return `-font "${font}" -pointsize ${size} -fill "${color}" -stroke black -strokewidth 1 -draw "text ${x},${y} '${safeText}'"`;
   }).join(" ");
 
   const cmd = `convert "${input}" ${drawCommands} "${output}"`;
